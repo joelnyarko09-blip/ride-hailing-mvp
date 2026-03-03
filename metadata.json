@@ -1,0 +1,7 @@
+{
+  "name": "Drop - Accra Transport Optimization",
+  "description": "A multi-stop transport optimization platform for small traders and informal commerce in Ghana, reducing congestion and costs through intelligent routing and sharing.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
