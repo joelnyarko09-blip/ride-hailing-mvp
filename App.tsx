@@ -6,6 +6,7 @@ import { AdminDashboard } from './views/AdminDashboard';
 import { Button } from './components/Button';
 import { COLORS } from './constants';
 import { Signup } from './signup';
+import { isSupabaseConfigured } from './supabase';
 
 const Splash: React.FC<{ onSelect: (role: UserRole) => void }> = ({ onSelect }) => {
   return (
@@ -58,6 +59,7 @@ type AppScreen = 'SPLASH' | 'SIGNUP' | 'PASSENGER' | 'DRIVER' | 'ADMIN'
 
 const App: React.FC = () => {
   const [screen, setScreen] = useState<AppScreen>('SPLASH');
+  const isMapboxConfigured = Boolean(import.meta.env.VITE_MAPBOX_TOKEN);
 
   const handleRoleSelect = (role: UserRole) => {
     if (role === UserRole.PASSENGER) {
@@ -73,6 +75,13 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
+      {(!isSupabaseConfigured || !isMapboxConfigured) && (
+        <div className="bg-yellow-100 text-yellow-900 border-b border-yellow-300 px-4 py-3 text-sm">
+          Missing environment setup.
+          {!isSupabaseConfigured && ' Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.'}
+          {!isMapboxConfigured && ' Add VITE_MAPBOX_TOKEN.'}
+        </div>
+      )}
       {screen === 'SPLASH' && <Splash onSelect={handleRoleSelect} />}
       {screen === 'SIGNUP' && (
         <Signup

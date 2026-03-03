@@ -4,7 +4,6 @@ import { Trip, TripMode, VehicleType, Stop, TripStatus } from '../types';
 import { Button } from '../components/Button';
 import { Header } from '../components/Header';
 import { COLORS, PRICING, ACCRA_STOPS } from '../constants';
-import { optimizeRouteWithGemini } from '../services/geminiService';
 
 const PassengerHome: React.FC<{ onPlanTrip: () => void }> = ({ onPlanTrip }) => {
   return (
@@ -61,7 +60,7 @@ const PassengerHome: React.FC<{ onPlanTrip: () => void }> = ({ onPlanTrip }) => 
           <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1a1 1 0 112 0v1a1 1 0 11-2 0zM13.536 14.95a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 011.414-1.414l.707.707zM16 18a1 1 0 100-2h-1a1 1 0 100 2h1z" /></svg>
         </div>
         <div>
-          <h4 className="font-bold text-blue-800 text-sm">AI Route Guard</h4>
+          <h4 className="font-bold text-blue-800 text-sm">Route Guard</h4>
           <p className="text-[11px] text-blue-700">Traffic is building up near Tema Station. Plan your commute before 4 PM to save 20 minutes.</p>
         </div>
       </div>
@@ -78,6 +77,23 @@ const TripPlanner: React.FC<{ onTripConfirmed: (trip: Trip) => void; onBack: () 
   const [mode, setMode] = useState<TripMode>(TripMode.SHARE_SAVE);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizationData, setOptimizationData] = useState<any>(null);
+
+  const optimizeRouteLocally = (currentStops: Stop[], tradeTrip: boolean) => {
+    const sortedStopNames = [...currentStops].map(stop => stop.name).sort();
+    const travelLegs = Math.max(currentStops.length - 1, 1);
+    const totalDistanceKm = Number((travelLegs * (tradeTrip ? 4.8 : 3.6)).toFixed(1));
+    const waitMins = currentStops.reduce((sum, stop) => sum + (stop.waitTime || 0), 0);
+    const totalDurationMins = Math.round(totalDistanceKm * (tradeTrip ? 6.5 : 5.5) + waitMins);
+
+    return {
+      optimizedStopNames: sortedStopNames,
+      totalDistanceKm,
+      totalDurationMins,
+      traderTip: tradeTrip
+        ? "Group nearby market drops first to reduce loading delays."
+        : "Leave 10 minutes earlier during peak school and office traffic."
+    };
+  };
 
   const addStop = () => {
     if (stops.length >= 6) return;
@@ -106,7 +122,7 @@ const TripPlanner: React.FC<{ onTripConfirmed: (trip: Trip) => void; onBack: () 
 
   const runOptimization = async () => {
     setIsOptimizing(true);
-    const data = await optimizeRouteWithGemini(stops, isTradeTrip);
+    const data = optimizeRouteLocally(stops, isTradeTrip);
     setOptimizationData(data);
     setIsOptimizing(false);
   };
@@ -218,7 +234,7 @@ const TripPlanner: React.FC<{ onTripConfirmed: (trip: Trip) => void; onBack: () 
           <div className={`rounded-2xl p-4 border ${isTradeTrip ? 'bg-orange-50 border-orange-100' : 'bg-blue-50 border-blue-100'}`}>
             <h4 className={`font-bold text-sm mb-1 flex items-center gap-1 ${isTradeTrip ? 'text-orange-800' : 'text-blue-800'}`}>
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.4503-.103c-.328.311-.645.641-.947.987a11.517 11.517 0 00-1.997 2.912c-.52.986-.852 2.05-.852 3.151 0 .285.016.568.048.847l-1.344.908a1 1 0 00-.332 1.353l.5 1.05a1 1 0 001.353.332l1.344-.908c.28.032.563.048.848.048.435 0 .864-.041 1.282-.12l.656 1.344a1 1 0 001.352.332l1.05-.5a1 1 0 00.332-1.353l-.656-1.344c.482-.418.887-.923 1.196-1.503.498-.946.815-1.967.815-3.023 0-1.056-.317-2.077-.815-3.023a11.517 11.517 0 00-1.997-2.912 11.524 11.524 0 00-.947-.987z" clipRule="evenodd" /></svg>
-              AI Smart Route
+              Route Summary
             </h4>
             <p className={`text-xs italic ${isTradeTrip ? 'text-orange-700' : 'text-blue-700'}`}>"{optimizationData.traderTip}"</p>
           </div>
