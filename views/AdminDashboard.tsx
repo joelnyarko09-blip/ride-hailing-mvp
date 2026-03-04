@@ -3,17 +3,35 @@ import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { COLORS } from '../constants';
 
-const DATA = [
-  { name: 'Mon', trips: 400, rev: 2400 },
-  { name: 'Tue', trips: 300, rev: 1398 },
-  { name: 'Wed', trips: 200, rev: 9800 },
-  { name: 'Thu', trips: 278, rev: 3908 },
-  { name: 'Fri', trips: 189, rev: 4800 },
-  { name: 'Sat', trips: 239, rev: 3800 },
-  { name: 'Sun', trips: 349, rev: 4300 },
-];
+type DashboardPoint = {
+  name: string;
+  trips: number;
+  rev: number;
+};
+
+type DriverActivity = {
+  name: string;
+  status: 'Online' | 'In Trip' | 'Offline';
+  vehicle: string;
+  earnings: number;
+};
 
 export const AdminDashboard: React.FC = () => {
+  const activeTrips = 0;
+  const totalRevenue = 0;
+  const co2Saved = 0;
+  const traderSavings = 0;
+
+  const chartData: DashboardPoint[] = [];
+  const recentDriverActivity: DriverActivity[] = [];
+
+  const metricCards = [
+    { label: 'Active Trips', val: String(activeTrips), sub: 'No live data yet' },
+    { label: 'Total Revenue', val: `GHS ${totalRevenue.toFixed(2)}`, sub: 'No live data yet' },
+    { label: 'CO2 Saved', val: `${co2Saved.toFixed(1)} Tons`, sub: 'No live data yet' },
+    { label: 'Trader Savings', val: `${traderSavings}%`, sub: 'No live data yet' },
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -29,16 +47,11 @@ export const AdminDashboard: React.FC = () => {
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {[
-            { label: 'Active Trips', val: '128', sub: '+12% from last hour', color: 'blue' },
-            { label: 'Total Revenue', val: 'GHS 42.5k', sub: 'Last 24 hours', color: 'orange' },
-            { label: 'CO2 Saved', val: '14.2 Tons', sub: 'Since launch', color: 'green' },
-            { label: 'Trader Savings', val: '32%', sub: 'Avg per trip', color: 'indigo' },
-          ].map((stat, i) => (
+          {metricCards.map((stat, i) => (
             <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
               <p className="text-sm font-medium text-gray-500 mb-1">{stat.label}</p>
               <p className="text-2xl font-bold text-gray-900 mb-1">{stat.val}</p>
-              <p className="text-xs text-green-600 font-semibold">{stat.sub}</p>
+              <p className="text-xs text-gray-500 font-semibold">{stat.sub}</p>
             </div>
           ))}
         </div>
@@ -47,29 +60,41 @@ export const AdminDashboard: React.FC = () => {
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <h3 className="text-lg font-bold mb-6">Daily Trip Volume</h3>
             <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={DATA}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                  <YAxis axisLine={false} tickLine={false} />
-                  <Tooltip cursor={{ fill: '#f3f4f6' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                  <Bar dataKey="trips" fill={COLORS.primary} radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              {chartData.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-sm text-gray-400">
+                  No trip data available yet.
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                    <YAxis axisLine={false} tickLine={false} />
+                    <Tooltip cursor={{ fill: '#f3f4f6' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    <Bar dataKey="trips" fill={COLORS.primary} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <h3 className="text-lg font-bold mb-6">Platform Revenue (GHS)</h3>
             <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={DATA}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                  <YAxis axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                  <Line type="monotone" dataKey="rev" stroke={COLORS.secondary} strokeWidth={3} dot={{ r: 4, fill: COLORS.secondary }} />
-                </LineChart>
-              </ResponsiveContainer>
+              {chartData.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-sm text-gray-400">
+                  No revenue data available yet.
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                    <YAxis axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    <Line type="monotone" dataKey="rev" stroke={COLORS.secondary} strokeWidth={3} dot={{ r: 4, fill: COLORS.secondary }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
         </div>
@@ -90,27 +115,31 @@ export const AdminDashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {[
-                { name: 'Kwame Mensah', status: 'Online', vehicle: 'Minivan', earnings: 'GHS 142' },
-                { name: 'John Appiah', status: 'In Trip', vehicle: 'Motorcycle', earnings: 'GHS 98' },
-                { name: 'Ebenezer Lartey', status: 'Offline', vehicle: 'Truck', earnings: 'GHS 550' },
-              ].map((row, i) => (
-                <tr key={i} className="text-sm">
-                  <td className="px-6 py-4 font-medium">{row.name}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${row.status === 'Online' ? 'bg-green-100 text-green-600' : row.status === 'In Trip' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'}`}>
-                      {row.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-gray-500">{row.vehicle}</td>
-                  <td className="px-6 py-4 font-bold">{row.earnings}</td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" /></svg>
-                    </button>
+              {recentDriverActivity.length === 0 ? (
+                <tr>
+                  <td className="px-6 py-8 text-sm text-gray-400 text-center" colSpan={5}>
+                    No driver activity yet.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                recentDriverActivity.map((row, i) => (
+                  <tr key={i} className="text-sm">
+                    <td className="px-6 py-4 font-medium">{row.name}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${row.status === 'Online' ? 'bg-green-100 text-green-600' : row.status === 'In Trip' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'}`}>
+                        {row.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-gray-500">{row.vehicle}</td>
+                    <td className="px-6 py-4 font-bold">GHS {row.earnings.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-right">
+                      <button className="text-gray-400 hover:text-gray-600">
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" /></svg>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
